@@ -14,22 +14,22 @@ function Zenmoney() {
         this.oauth,
         'nonce',
         {
-            get : function() {
+            get: function () {
                 var result = '',
                     i = 0,
                     rnum,
                     chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
                     cLength = chars.length;
 
-                for (; i < 32; i++) {
+                for (i = 0; i < 32; ++i) {
                     rnum = Math.floor(Math.random() * cLength);
                     result += chars.substring(rnum, rnum + 1);
                 }
 
                 return result;
             },
-            enumerable : true,
-            configurable : false
+            enumerable: true,
+            configurable: false
         }
     );
 
@@ -37,15 +37,15 @@ function Zenmoney() {
         this.oauth,
         'signature',
         {
-            get : function() {
+            get: function () {
                 var result = '';
 
                 result = this.consumerSecret + '&' + (this.tokenSecret == null ? '' : this.tokenSecret);
 
                 return result;
             },
-            enumerable : true,
-            configurable : false
+            enumerable: true,
+            configurable: false
         }
     );
 
@@ -53,18 +53,18 @@ function Zenmoney() {
         this.oauth,
         'token',
         {
-            get : function() {
+            get: function () {
                 var result = '';
 
                 result = localStorage.getItem('zwe_oauth_token');
 
                 return result;
             },
-            set : function(token) {
+            set: function (token) {
                 localStorage.setItem('zwe_oauth_token', token);
             },
-            enumerable : true,
-            configurable : false
+            enumerable: true,
+            configurable: false
         }
     );
 
@@ -72,18 +72,18 @@ function Zenmoney() {
         this.oauth,
         'tokenSecret',
         {
-            get : function() {
+            get: function () {
                 var result = '';
 
                 result = localStorage.getItem('zwe_oauth_token_secret');
 
                 return result;
             },
-            set : function(tokenSecret) {
+            set: function (tokenSecret) {
                 localStorage.setItem('zwe_oauth_token_secret', tokenSecret);
             },
-            enumerable : true,
-            configurable : false
+            enumerable: true,
+            configurable: false
         }
     );
 
@@ -91,23 +91,23 @@ function Zenmoney() {
         this.oauth,
         'tokenType',
         {
-            get : function() {
+            get: function () {
                 var result = '';
 
                 result = localStorage.getItem('zwe_oauth_token_type');
 
                 return result;
             },
-            set : function(tokenType) {
+            set: function (tokenType) {
                 localStorage.setItem('zwe_oauth_token_type', tokenType);
             },
-            enumerable : true,
-            configurable : false
+            enumerable: true,
+            configurable: false
         }
     );
 }
 
-Zenmoney.prototype.request = function(uri, params, method) {
+Zenmoney.prototype.request = function (uri, params, method) {
     if (method == undefined) method = 'GET';
 
     var xhr = new XMLHttpRequest(),
@@ -122,14 +122,14 @@ Zenmoney.prototype.request = function(uri, params, method) {
         }
 
         response = this.responseText;
-    }
+    };
     xhr.open(method, this.createUrl(uri, params), false);
     xhr.send();
 
     return response;
 }
 
-Zenmoney.prototype.createParamsString = function(params) {
+Zenmoney.prototype.createParamsString = function (params) {
     var paramArray = [];
 
     for (param in params) {
@@ -139,7 +139,7 @@ Zenmoney.prototype.createParamsString = function(params) {
     return paramArray.join('&');
 }
 
-Zenmoney.prototype.createUrl = function(uri, params) {
+Zenmoney.prototype.createUrl = function (uri, params) {
     var url = uri,
         appender = '?';
 
@@ -152,7 +152,7 @@ Zenmoney.prototype.createUrl = function(uri, params) {
     return url;
 }
 
-Zenmoney.prototype.redirectToLogin = function(loginUrlStr) {
+Zenmoney.prototype.redirectToLogin = function (loginUrlStr) {
     var params = {
         oauth_token: this.oauth.token
     };
@@ -161,7 +161,7 @@ Zenmoney.prototype.redirectToLogin = function(loginUrlStr) {
 }
 
 
-Zenmoney.prototype.saveToken = function(data, type) {
+Zenmoney.prototype.saveToken = function (data, type) {
     var token, tokenSecret, tokenData = data.split('&');
 
     for (var i = 0; i < tokenData.length; i++) {
@@ -183,13 +183,13 @@ Zenmoney.prototype.saveToken = function(data, type) {
     return this;
 }
 
-Zenmoney.prototype.wipeToken = function() {
+Zenmoney.prototype.wipeToken = function () {
     localStorage.removeItem('zwe_oauth_token');
     localStorage.removeItem('zwe_oauth_token_secret');
     localStorage.removeItem('zwe_oauth_token_type');
 }
 
-Zenmoney.prototype.saveVerifier = function(data) {
+Zenmoney.prototype.saveVerifier = function (data) {
     var verifier;
 
     if (data.indexOf('oauth_verifier') >= 0) {
@@ -202,7 +202,7 @@ Zenmoney.prototype.saveVerifier = function(data) {
     return this;
 }
 
-Zenmoney.prototype.isAuthorized = function() {
+Zenmoney.prototype.isAuthorized = function () {
     //TODO: Add check for token lifetime
     if (this.oauth.token != null && this.oauth.tokenType == 'access') {
         return true;
@@ -211,7 +211,7 @@ Zenmoney.prototype.isAuthorized = function() {
     return false;
 }
 
-Zenmoney.prototype.authorize = function() {
+Zenmoney.prototype.authorize = function () {
     if (this.oauth.token != null) {
 
         try {
@@ -229,7 +229,7 @@ Zenmoney.prototype.authorize = function() {
                 oauth_signature_method: 'PLAINTEXT',
                 oauth_signature: this.oauth.signature,
                 oauth_nonce: this.oauth.nonce,
-                oauth_timestamp: Math.round(new Date().getTime()/1000.0),
+                oauth_timestamp: Math.round(new Date().getTime() / 1000.0),
                 oauth_callback: this.oauth.callbackUrl,
                 oauth_version: '1.0',
                 oauth_token: this.oauth.token,
@@ -247,7 +247,7 @@ Zenmoney.prototype.authorize = function() {
                 oauth_signature_method: 'PLAINTEXT',
                 oauth_signature: this.oauth.signature,
                 oauth_nonce: this.oauth.nonce,
-                oauth_timestamp: Math.round(new Date().getTime()/1000.0),
+                oauth_timestamp: Math.round(new Date().getTime() / 1000.0),
                 oauth_callback: this.oauth.callbackUrl,
                 oauth_version: '1.0'
             }
@@ -258,7 +258,7 @@ Zenmoney.prototype.authorize = function() {
     }
 }
 
-Zenmoney.prototype.log = function() {
+Zenmoney.prototype.log = function () {
     if (this.debug) {
         console.log.apply(console, arguments);
     }
