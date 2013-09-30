@@ -8,6 +8,7 @@ function Zenmoney() {
     this.oauth.accessTokenEndpoint = 'http://api.zenmoney.ru/oauth/access_token';
     this.oauth.authorizeUrl = 'http://api.zenmoney.ru/access/?mobile';
     this.oauth.callbackUrl = 'http://dev.local/zenmoney-chrome-ext/';
+    this.oauth.resourceUrl = 'http://api.zenmoney.ru/';
     this.oauth.verifier = null;
 
     Object.defineProperty(
@@ -111,7 +112,8 @@ Zenmoney.prototype.request = function (uri, params, method) {
     if (method == undefined) method = 'GET';
 
     var xhr = new XMLHttpRequest(),
-        response = '';
+        response = '',
+        sendParams = null;
 
     this.log('Start request %s:%s', method, uri);
 
@@ -123,8 +125,17 @@ Zenmoney.prototype.request = function (uri, params, method) {
 
         response = this.responseText;
     };
+
+
+
+    if (method == 'GET') {
+        uri = this.createUrl(uri, params);
+    } else {
+        sendParams = this.createParamsString(params);
+    }
+
     xhr.open(method, this.createUrl(uri, params), false);
-    xhr.send();
+    xhr.send(sendParams);
 
     return response;
 }
@@ -215,6 +226,7 @@ Zenmoney.prototype.authorize = function () {
     if (this.oauth.token != null) {
 
         try {
+            this.log('Save verifier from: %s', window.location.href);
             this.saveVerifier(window.location.href);
         } catch (e) {
             zenmoney.wipeToken();
@@ -238,6 +250,7 @@ Zenmoney.prototype.authorize = function () {
         );
         this.log('Received data: %s', accessTokenData);
         this.saveToken(accessTokenData, 'access');
+        this.log('Token type: %s; Token: %s; Token secret %s', this.oauth.tokenType, this.oauth.token, this.oauth.tokenSecret);
     } else {
         this.log('Requesting request token');
         var requestTokenData = this.request(
@@ -254,7 +267,8 @@ Zenmoney.prototype.authorize = function () {
         );
         this.log('Received data: %s', requestTokenData);
         this.saveToken(requestTokenData, 'request');
-//        this.redirectToLogin();
+        this.log('Token type: %s; Token: %s; Token secret %s', this.oauth.tokenType, this.oauth.token, this.oauth.tokenSecret);
+        this.redirectToLogin();
     }
 }
 
