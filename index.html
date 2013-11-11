@@ -3,30 +3,22 @@
 <head>
     <title>test</title>
     <script type="text/javascript" src="js/zenmoney-api.js"></script>
-    <!--<link rel="stylesheet" href="css/default.css" type="text/css">-->
+    <link rel="stylesheet" href="./css/dafault.css" type="text/css">
 </head>
 <body>
-    <h1>Test</h1>
     <script type="text/javascript">
         var zenmoney = new Zenmoney();
 
         if (!zenmoney.isAuthorized()) {
             zenmoney.authorize();
         }
-
-
-//        data = zenmoney.request(
-//                zenmoney.oauth.requestTokenEndpoint,
-//                {
-//                    oauth_consumer_key: zenmoney.oauth.consumerKey,
-//                    oauth_token: zenmoney.oauth.token,
-//                    oauth_signature_method: 'PLAINTEXT',
-//                    oauth_signature: zenmoney.oauth.signature,
-//                    oauth_nonce: zenmoney.oauth.nonce,
-//                    oauth_timestamp: Math.round(new Date().getTime()/1000.0),
-//                    oauth_version: '1.0'
-//                }
-//        );
     </script>
+    <div id="status_bar">
+        <div id="add_transaction_btn"><a href="">+</a></div>
+        <div id="info"><a href="http://zenmoney.ru">Zenmoney</a></div>
+        <div id="settings_btn"><a href="">*</a></div>
+    </div>
+    <hr>
+    <div id="wrapper"></div>
 </body>
 </html>

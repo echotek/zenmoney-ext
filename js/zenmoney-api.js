@@ -11,99 +11,117 @@ function Zenmoney() {
     this.oauth.resourceUrl = 'http://api.zenmoney.ru/';
     this.oauth.verifier = null;
 
-    Object.defineProperty(
-        this.oauth,
-        'nonce',
-        {
-            get: function () {
-                var result = '',
-                    i = 0,
-                    rnum,
-                    chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-                    cLength = chars.length;
+    this.oauth.getRequestTokenParams = function () {
+        return {
+            oauth_consumer_key: this.consumerKey,
+            oauth_signature_method: 'PLAINTEXT',
+            oauth_signature: this.signature,
+            oauth_nonce: this.nonce,
+            oauth_timestamp: Math.round(new Date().getTime() / 1000.0),
+            oauth_callback: this.callbackUrl,
+            oauth_version: '1.0'
+        };
+    }
 
-                for (i = 0; i < 32; ++i) {
-                    rnum = Math.floor(Math.random() * cLength);
-                    result += chars.substring(rnum, rnum + 1);
-                }
+    this.oauth.getAccessTokenParams = function () {
+        return {
+            oauth_consumer_key: this.consumerKey,
+            oauth_signature_method: 'PLAINTEXT',
+            oauth_signature: this.signature,
+            oauth_nonce: this.nonce,
+            oauth_timestamp: Math.round(new Date().getTime() / 1000.0),
+            oauth_callback: this.callbackUrl,
+            oauth_version: '1.0',
+            oauth_token: this.token,
+            oauth_verifier: this.verifier
+        };
+    }
 
-                return result;
-            },
-            enumerable: true,
-            configurable: false
+    this.oauth.getRequestParams = function () {
+        return {
+            oauth_consumer_key: this.consumerKey,
+            oauth_token: this.token,
+            oauth_timestamp: Math.round(new Date().getTime() / 1000.0),
+            oauth_signature_method: 'PLAINTEXT',
+            oauth_signature: this.signature,
+            oauth_nonce: this.nonce
         }
-    );
+    }
 
-    Object.defineProperty(
+    Object.defineProperties(
         this.oauth,
-        'signature',
         {
-            get: function () {
-                var result = '';
+            nonce: {
+                get: function () {
+                    var result = '',
+                        i = 0,
+                        rnum,
+                        chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+                        cLength = chars.length;
 
-                result = this.consumerSecret + '&' + (this.tokenSecret == null ? '' : this.tokenSecret);
+                    for (i = 0; i < 32; ++i) {
+                        rnum = Math.floor(Math.random() * cLength);
+                        result += chars.substring(rnum, rnum + 1);
+                    }
 
-                return result;
+                    return result;
+                },
+                enumerable: true,
+                configurable: false
             },
-            enumerable: true,
-            configurable: false
-        }
-    );
+            signature: {
+                get: function () {
+                    var result = '';
 
-    Object.defineProperty(
-        this.oauth,
-        'token',
-        {
-            get: function () {
-                var result = '';
+                    result = this.consumerSecret + '&' + (this.tokenSecret == null ? '' : this.tokenSecret);
 
-                result = localStorage.getItem('zwe_oauth_token');
-
-                return result;
+                    return result;
+                },
+                enumerable: true,
+                configurable: false
             },
-            set: function (token) {
-                localStorage.setItem('zwe_oauth_token', token);
+            token: {
+                get: function () {
+                    var result = '';
+
+                    result = localStorage.getItem('zwe_oauth_token');
+
+                    return result;
+                },
+                set: function (token) {
+                    localStorage.setItem('zwe_oauth_token', token);
+                },
+                enumerable: true,
+                configurable: false
             },
-            enumerable: true,
-            configurable: false
-        }
-    );
+            tokenSecret: {
+                get: function () {
+                    var result = '';
 
-    Object.defineProperty(
-        this.oauth,
-        'tokenSecret',
-        {
-            get: function () {
-                var result = '';
+                    result = localStorage.getItem('zwe_oauth_token_secret');
 
-                result = localStorage.getItem('zwe_oauth_token_secret');
-
-                return result;
+                    return result;
+                },
+                set: function (tokenSecret) {
+                    localStorage.setItem('zwe_oauth_token_secret', tokenSecret);
+                },
+                enumerable: true,
+                configurable: false
             },
-            set: function (tokenSecret) {
-                localStorage.setItem('zwe_oauth_token_secret', tokenSecret);
-            },
-            enumerable: true,
-            configurable: false
-        }
-    );
+            tokenType: {
+                get: function () {
+                    var result = '';
 
-    Object.defineProperty(
-        this.oauth,
-        'tokenType',
-        {
-            get: function () {
-                var result = '';
+                    result = localStorage.getItem('zwe_oauth_token_type');
 
-                result = localStorage.getItem('zwe_oauth_token_type');
-
-                return result;
-            },
-            set: function (tokenType) {
-                localStorage.setItem('zwe_oauth_token_type', tokenType);
-            },
-            enumerable: true,
-            configurable: false
+                    return result;
+                },
+                set: function (tokenType) {
+                    localStorage.setItem('zwe_oauth_token_type', tokenType);
+                },
+                enumerable: true,
+                configurable: false
+            }
         }
     );
 }
@@ -115,8 +133,6 @@ Zenmoney.prototype.request = function (uri, params, method) {
         response = '',
         sendParams = null;
 
-    this.log('Start request %s:%s', method, uri);
-
     xhr.onload = function () {
 
         if (this.status < 200 || this.status > 299) {
@@ -126,8 +142,6 @@ Zenmoney.prototype.request = function (uri, params, method) {
         response = this.responseText;
     };
 
-
-
     if (method == 'GET') {
         uri = this.createUrl(uri, params);
     } else {
@@ -135,24 +149,32 @@ Zenmoney.prototype.request = function (uri, params, method) {
     }
 
     xhr.open(method, this.createUrl(uri, params), false);
-    xhr.send(sendParams);
+
+    xhr.send();
 
     return response;
 }
 
-Zenmoney.prototype.createParamsString = function (params) {
+Zenmoney.prototype.createParamsString = function (params, glue, paramEnclosure) {
+    if (glue == undefined) glue = '&';
+    if (paramEnclosure == undefined) paramEnclosure = '';
+
     var paramArray = [];
 
     for (param in params) {
-        paramArray.push(encodeURIComponent(param) + '=' + encodeURIComponent(params[param]));
+        paramArray.push(encodeURIComponent(param) + '=' + paramEnclosure + encodeURIComponent(params[param]) + paramEnclosure);
     }
 
-    return paramArray.join('&');
+    return paramArray.join(glue);
 }
 
 Zenmoney.prototype.createUrl = function (uri, params) {
     var url = uri,
         appender = '?';
+
+    if (!params) {
+        return uri;
+    }
 
     if (url.indexOf('?') > 0) {
         appender = '&';
@@ -214,66 +236,73 @@ Zenmoney.prototype.saveVerifier = function (data) {
 }
 
 Zenmoney.prototype.isAuthorized = function () {
+    this.log('Check authorization');
+
     //TODO: Add check for token lifetime
     if (this.oauth.token != null && this.oauth.tokenType == 'access') {
+        this.log('Authorized!');
         return true;
     }
 
+    this.log('Not authorized =(');
     return false;
 }
 
 Zenmoney.prototype.authorize = function () {
-    if (this.oauth.token != null) {
+    this.log('Start authorization');
 
+    if (this.oauth.token != null) {
         try {
             this.log('Save verifier from: %s', window.location.href);
             this.saveVerifier(window.location.href);
         } catch (e) {
-            zenmoney.wipeToken();
+            this.wipeToken();
             throw new Error(e.message);
         }
 
         this.log('Requesting access token');
         var accessTokenData = this.request(
             this.oauth.accessTokenEndpoint,
-            {
-                oauth_consumer_key: this.oauth.consumerKey,
-                oauth_signature_method: 'PLAINTEXT',
-                oauth_signature: this.oauth.signature,
-                oauth_nonce: this.oauth.nonce,
-                oauth_timestamp: Math.round(new Date().getTime() / 1000.0),
-                oauth_callback: this.oauth.callbackUrl,
-                oauth_version: '1.0',
-                oauth_token: this.oauth.token,
-                oauth_verifier: this.oauth.verifier
-            }
+            this.oauth.getAccessTokenParams(),
+            'GET'
         );
         this.log('Received data: %s', accessTokenData);
         this.saveToken(accessTokenData, 'access');
         this.log('Token type: %s; Token: %s; Token secret %s', this.oauth.tokenType, this.oauth.token, this.oauth.tokenSecret);
     } else {
         this.log('Requesting request token');
+
         var requestTokenData = this.request(
             this.oauth.requestTokenEndpoint,
-            {
-                oauth_consumer_key: this.oauth.consumerKey,
-                oauth_signature_method: 'PLAINTEXT',
-                oauth_signature: this.oauth.signature,
-                oauth_nonce: this.oauth.nonce,
-                oauth_timestamp: Math.round(new Date().getTime() / 1000.0),
-                oauth_callback: this.oauth.callbackUrl,
-                oauth_version: '1.0'
-            }
+            this.oauth.getRequestTokenParams(),
+            'GET'
         );
         this.log('Received data: %s', requestTokenData);
         this.saveToken(requestTokenData, 'request');
         this.log('Token type: %s; Token: %s; Token secret %s', this.oauth.tokenType, this.oauth.token, this.oauth.tokenSecret);
+        this.log('Redirecting to service provider');
+
+        if (this.debug) {
+            confirm('Proceed with redirect?');
+        }
+
         this.redirectToLogin();
     }
 }
 
 Zenmoney.prototype.log = function () {
-    if (this.debug) {
+    if (this.debug == true) {
         console.log.apply(console, arguments);
     }
+}
+
+Zenmoney.prototype.getTransactions = function() {
+    var data;
+
+    data = zenmoney.request(
+        zenmoney.oauth.resourceUrl + 'v1/transaction/',
+        zenmoney.oauth.getRequestParams()
+    );
+
+    data = JSON.parse(data);
 }
